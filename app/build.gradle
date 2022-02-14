@@ -64,14 +64,12 @@ dependencies {
   // Google sign in
   implementation 'com.google.android.gms:play-services-auth:19.0.0'
 
-  // Retrofit and moshi
-  implementation 'com.squareup.okhttp3:okhttp:4.9.1'
-  implementation 'com.squareup.okhttp3:logging-interceptor:4.9.1'
-  implementation "com.squareup.retrofit2:retrofit:$retrofitVersion"
-  implementation "com.squareup.retrofit2:converter-moshi:$retrofitVersion"
-  implementation "com.squareup.moshi:moshi-kotlin:$moshiVersion"
-  implementation "com.squareup.moshi:moshi:$moshiVersion"
-  kapt "com.squareup.moshi:moshi-kotlin-codegen:$moshiVersion"
+  implementation "io.ktor:ktor-client-core:$ktor_version"
+  implementation "io.ktor:ktor-client-android:$ktor_version"
+  implementation "io.ktor:ktor-client-serialization:$ktor_version"
+  implementation "io.ktor:ktor-client-logging:$ktor_version"
+  implementation "ch.qos.logback:logback-classic:1.2.3"
+  implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.0"
 
   // Dagger Core
   implementation "com.google.dagger:dagger:$hiltVersion"
