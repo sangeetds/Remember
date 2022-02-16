@@ -61,6 +61,8 @@ dependencies {
   // timber logging
   implementation 'com.jakewharton.timber:timber:4.7.1'
 
+  implementation 'app.cash.copper:copper-flow:1.0.0'
+
   // Google sign in
   implementation 'com.google.android.gms:play-services-auth:19.0.0'
 

@@ -1,8 +1,13 @@
 package com.example.remember
 
+import android.Manifest
+import android.content.ContentResolver
+import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
+import android.provider.CalendarContract
+import android.provider.CalendarContract.Calendars
 import android.view.View
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -32,6 +37,11 @@ import timber.log.Timber
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+  private val loginViewModel: LoginViewModel by viewModels()
+  private lateinit var googleLoginButton: SignInButton // by lazy { findViewById(id.googleSignInButton) }
+  private lateinit var progressIndicator: CircularProgressIndicator // by lazy { findViewById(id.loading_icon) }
+  private lateinit var mGoogleSignInClient: GoogleSignInClient
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContent {
@@ -43,15 +53,12 @@ class MainActivity : ComponentActivity() {
       }
     }
     setUpObserver()
-    darkModeConfigure()
-    setUpButtons()
-    mGoogleSignInClient = googleSignInClient()
+    this.requestPermissions(arrayOf(Manifest.permission.READ_CALENDAR), 42)
+    this.loginViewModel.getData(contentResolver = contentResolver)
+    // darkModeConfigure()
+    // setUpButtons()
+    // mGoogleSignInClient = googleSignInClient()
   }
-
-  private val loginViewModel: LoginViewModel by viewModels()
-  private lateinit var googleLoginButton: SignInButton // by lazy { findViewById(id.googleSignInButton) }
-  private lateinit var progressIndicator: CircularProgressIndicator // by lazy { findViewById(id.loading_icon) }
-  private lateinit var mGoogleSignInClient: GoogleSignInClient
 
   private fun darkModeConfigure() {
     when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
@@ -86,13 +93,9 @@ class MainActivity : ComponentActivity() {
       val loginResult = it ?: return@Observer
 
       loginResult.apply {
-        error?.let {
-          Timber.e("Login not successful")
-          showLoginFailed(error)
-        }
         success?.let {
           Timber.i("Logged in successfully")
-          updateUiWithUser()
+
         }
         setResult(RESULT_OK)
       }
@@ -153,3 +156,9 @@ fun DefaultPreview() {
     Greeting("Android")
   }
 }
+
+data class GoogleCalendar(
+  val event_id: Int,
+  val title: String,
+  val organizer: String,
+)
