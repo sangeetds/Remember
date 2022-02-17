@@ -1,13 +1,13 @@
 package com.example.remember
 
 import android.Manifest
-import android.content.ContentResolver
-import android.content.Context
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
-import android.provider.CalendarContract
-import android.provider.CalendarContract.Calendars
+import android.os.SystemClock
+import android.provider.CalendarContract.Events
 import android.view.View
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -33,6 +33,7 @@ import com.google.android.gms.tasks.Task
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
+import java.util.Calendar
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -52,9 +53,48 @@ class MainActivity : ComponentActivity() {
         }
       }
     }
-    setUpObserver()
+
     this.requestPermissions(arrayOf(Manifest.permission.READ_CALENDAR), 42)
-    this.loginViewModel.getData(contentResolver = contentResolver)
+
+    val projection = arrayOf(Events.DTSTART, Events.DTEND)
+    val calendar: Calendar = Calendar.getInstance()
+    calendar.set(
+      calendar.get(Calendar.YEAR),
+      calendar.get(Calendar.MONTH),
+      calendar.get(Calendar.DAY_OF_MONTH),
+      0,
+      0,
+      0
+    )
+    val startDay: Long = calendar.timeInMillis
+    calendar.set(
+      calendar.get(Calendar.YEAR),
+      calendar.get(Calendar.MONTH),
+      calendar.get(Calendar.DAY_OF_MONTH), 23, 59, 59
+    )
+    val endDay: Long = calendar.timeInMillis
+    val selection = "${Events.DTSTART} >= ? AND ${Events.DTSTART}<= ?"
+    val selectionArgs = arrayOf(startDay.toString(), endDay.toString())
+    val result = mutableListOf<Event>()
+    val cursor = contentResolver.query(
+      Events.CONTENT_URI,
+      projection,
+      selection,
+      selectionArgs,
+      null
+    )
+    if (cursor != null) {
+      while (cursor.moveToNext()) {
+        result.add(
+          Event(
+            cursor.getString(0),
+            cursor.getString(1),
+          )
+        )
+      }
+      cursor.close()
+    }
+    getAlarm(result)
     // darkModeConfigure()
     // setUpButtons()
     // mGoogleSignInClient = googleSignInClient()
@@ -94,12 +134,28 @@ class MainActivity : ComponentActivity() {
 
       loginResult.apply {
         success?.let {
-          Timber.i("Logged in successfully")
 
         }
         setResult(RESULT_OK)
       }
     })
+  }
+
+  private fun getAlarm(lists: List<Event>) {
+    // Get AlarmManager instance
+    val mgrAlarm = this.getSystemService(ALARM_SERVICE) as AlarmManager
+    lists.forEachIndexed { i, event ->
+      val intent = Intent(this, RememebrAlarmReceiver::class.java)
+      intent.putExtra("time", event.startTime)
+      // Loop counter `i` is used as a `requestCode`
+      val pendingIntent = PendingIntent.getBroadcast(this, i, intent, 0)
+      // Single alarms in 1, 2, ..., 10 minutes (in `i` minutes)
+      mgrAlarm.set(
+        AlarmManager.ELAPSED_REALTIME_WAKEUP,
+        SystemClock.elapsedRealtime() + 2000 * 2,
+        pendingIntent
+      )
+    }
   }
 
   private fun setUpButtons() {
