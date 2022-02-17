@@ -13,11 +13,17 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.Observer
@@ -49,11 +55,13 @@ class MainActivity : ComponentActivity() {
       RememberTheme {
         // A surface container using the 'background' color from the theme
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
-          Greeting("Android")
+          Greeting(setAlarms)
         }
       }
     }
+  }
 
+  val setAlarms = {
     this.requestPermissions(arrayOf(Manifest.permission.READ_CALENDAR), 42)
 
     val projection = arrayOf(Events.DTSTART, Events.DTEND)
@@ -152,7 +160,7 @@ class MainActivity : ComponentActivity() {
       // Single alarms in 1, 2, ..., 10 minutes (in `i` minutes)
       mgrAlarm.set(
         AlarmManager.ELAPSED_REALTIME_WAKEUP,
-        SystemClock.elapsedRealtime() + 2000 * 2,
+        SystemClock.elapsedRealtime() + 1000 * 2,
         pendingIntent
       )
     }
@@ -201,15 +209,24 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String) {
-  Text(text = "Hello $name!")
+fun Greeting(startAlarms: () -> Unit) {
+  Column(
+    modifier = Modifier
+      .fillMaxWidth()
+      .fillMaxHeight(), verticalArrangement = Arrangement.Center,
+    horizontalAlignment = Alignment.CenterHorizontally
+  ) {
+    Button(onClick = startAlarms) {
+      Text(text = "Set Today's Alarms")
+    }
+  }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
   RememberTheme {
-    Greeting("Android")
+    Greeting(startAlarms = { })
   }
 }
 
