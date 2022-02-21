@@ -78,7 +78,7 @@ class MainActivity : ComponentActivity() {
   private val getEvents = { list: MutableState<List<Event>> ->
     this.requestPermissions(arrayOf(Manifest.permission.READ_CALENDAR), 42)
 
-    val projection = arrayOf(Events.DTSTART, Events.DTEND, Events.TITLE)
+    val projection = arrayOf(Events.TITLE, Events.DTSTART, Events.DTEND)
     val calendar: Calendar = Calendar.getInstance()
     calendar.set(
       calendar.get(Calendar.YEAR),
@@ -216,7 +216,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(startAlarms: (MutableState<List<Event>>) -> Unit, getEvents: (List<Event>) -> Unit) {
+fun Greeting(getEvents: (MutableState<List<Event>>) -> Unit, startAlarms: (List<Event>) -> Unit) {
   val displayAlarmButton = remember { mutableStateOf(false) }
   val eventList = remember { mutableStateOf(listOf<Event>()) }
 
@@ -233,7 +233,7 @@ fun Greeting(startAlarms: (MutableState<List<Event>>) -> Unit, getEvents: (List<
       items(eventList.value) { event ->
         Text(text = "${event.title}: (${Instant.fromEpochMilliseconds(event.startTime.toLong()).toLocalDateTime(TimeZone.currentSystemDefault())}, ${Instant.fromEpochMilliseconds(event.endTime.toLong()).toLocalDateTime(TimeZone.currentSystemDefault())})") }
     }
-      Button(onClick = { startAlarms(eventList) }, modifier = Modifier.padding(top = 400.dp)) {
+      Button(onClick = { startAlarms(eventList.value) }, modifier = Modifier.padding(top = 400.dp)) {
         Text(text = "Set Today's Alarms")
       }
     }
@@ -246,7 +246,7 @@ fun Greeting(startAlarms: (MutableState<List<Event>>) -> Unit, getEvents: (List<
     ) {
       val current = LocalContext.current
       Button(onClick = {
-        getEvents(eventList.value)
+        getEvents(eventList)
         if (eventList.value.isEmpty()) {
           Toast.makeText(current, "No events for today", Toast.LENGTH_SHORT).show()
         } else {
@@ -263,7 +263,7 @@ fun Greeting(startAlarms: (MutableState<List<Event>>) -> Unit, getEvents: (List<
 @Composable
 fun DefaultPreview() {
   RememberTheme {
-    Greeting(startAlarms = { }) {
+    Greeting(getEvents = { }) {
       mutableStateOf(
         listOf<Event>(
 
