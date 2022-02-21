@@ -8,7 +8,6 @@ import android.content.res.Configuration
 import android.os.Bundle
 import android.os.SystemClock
 import android.provider.CalendarContract.Events
-import android.view.View
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -36,20 +35,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Observer
 import com.example.remember.ui.theme.RememberTheme
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions.Builder
-import com.google.android.gms.common.SignInButton
-import com.google.android.gms.common.api.ApiException
-import com.google.android.gms.tasks.Task
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import timber.log.Timber
 import java.util.Calendar
 
 @AndroidEntryPoint
@@ -62,7 +52,6 @@ class MainActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
     setContent {
       RememberTheme {
-        // A surface container using the 'background' color from the theme
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
           Greeting(getEvents, getAlarm)
         }
@@ -105,7 +94,7 @@ class MainActivity : ComponentActivity() {
     if (cursor != null) {
       while (cursor.moveToNext()) {
         if (cursor.getString(0) != null && cursor.getString(1) != null && cursor.getString(2) != null) {
-          result.add(Event(cursor.getString(0), cursor.getString(0), cursor.getString(1)))
+          result.add(Event(cursor.getString(0), cursor.getString(1), cursor.getString(2)))
         }
       }
       cursor.close()
