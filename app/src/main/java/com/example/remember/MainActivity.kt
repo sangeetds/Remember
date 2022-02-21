@@ -18,14 +18,22 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Observer
 import com.example.remember.ui.theme.RememberTheme
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -38,6 +46,9 @@ import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import timber.log.Timber
 import java.util.Calendar
 
@@ -55,16 +66,19 @@ class MainActivity : ComponentActivity() {
       RememberTheme {
         // A surface container using the 'background' color from the theme
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
-          Greeting(setAlarms)
+          Greeting(getEvents, getAlarm)
         }
       }
     }
+    // darkModeConfigure()
+    // setUpButtons()
+    // mGoogleSignInClient = googleSignInClient()
   }
 
-  val setAlarms = {
+  private val getEvents = { list: MutableState<List<Event>> ->
     this.requestPermissions(arrayOf(Manifest.permission.READ_CALENDAR), 42)
 
-    val projection = arrayOf(Events.DTSTART, Events.DTEND)
+    val projection = arrayOf(Events.DTSTART, Events.DTEND, Events.TITLE)
     val calendar: Calendar = Calendar.getInstance()
     calendar.set(
       calendar.get(Calendar.YEAR),
@@ -93,19 +107,14 @@ class MainActivity : ComponentActivity() {
     )
     if (cursor != null) {
       while (cursor.moveToNext()) {
-        result.add(
-          Event(
-            cursor.getString(0),
-            cursor.getString(1),
-          )
-        )
+        if (cursor.getString(0) != null && cursor.getString(1) != null && cursor.getString(2) != null) {
+          result.add(Event(cursor.getString(0), cursor.getString(0), cursor.getString(1)))
+        }
       }
       cursor.close()
     }
-    getAlarm(result)
-    // darkModeConfigure()
-    // setUpButtons()
-    // mGoogleSignInClient = googleSignInClient()
+
+    list.value = result
   }
 
   private fun darkModeConfigure() {
@@ -149,15 +158,13 @@ class MainActivity : ComponentActivity() {
     })
   }
 
-  private fun getAlarm(lists: List<Event>) {
+  private val getAlarm = { lists: List<Event> ->
     // Get AlarmManager instance
     val mgrAlarm = this.getSystemService(ALARM_SERVICE) as AlarmManager
     lists.forEachIndexed { i, event ->
       val intent = Intent(this, RememebrAlarmReceiver::class.java)
       intent.putExtra("time", event.startTime)
-      // Loop counter `i` is used as a `requestCode`
-      val pendingIntent = PendingIntent.getBroadcast(this, i, intent, 0)
-      // Single alarms in 1, 2, ..., 10 minutes (in `i` minutes)
+      val pendingIntent = PendingIntent.getBroadcast(this, i, intent, PendingIntent.FLAG_IMMUTABLE)
       mgrAlarm.set(
         AlarmManager.ELAPSED_REALTIME_WAKEUP,
         SystemClock.elapsedRealtime() + 1000 * 2,
@@ -209,15 +216,45 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(startAlarms: () -> Unit) {
-  Column(
-    modifier = Modifier
-      .fillMaxWidth()
-      .fillMaxHeight(), verticalArrangement = Arrangement.Center,
-    horizontalAlignment = Alignment.CenterHorizontally
-  ) {
-    Button(onClick = startAlarms) {
-      Text(text = "Set Today's Alarms")
+fun Greeting(startAlarms: (MutableState<List<Event>>) -> Unit, getEvents: (List<Event>) -> Unit) {
+  val displayAlarmButton = remember { mutableStateOf(false) }
+  val eventList = remember { mutableStateOf(listOf<Event>()) }
+
+  if (displayAlarmButton.value) {
+    Column(
+      modifier = Modifier
+        .fillMaxWidth()
+        .fillMaxHeight()
+        .padding(top = 70.dp, bottom = 70.dp, start = 40.dp, end = 40.dp)
+      , verticalArrangement = Arrangement.Center,
+      horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+    LazyColumn() {
+      items(eventList.value) { event ->
+        Text(text = "${event.title}: (${Instant.fromEpochMilliseconds(event.startTime.toLong()).toLocalDateTime(TimeZone.currentSystemDefault())}, ${Instant.fromEpochMilliseconds(event.endTime.toLong()).toLocalDateTime(TimeZone.currentSystemDefault())})") }
+    }
+      Button(onClick = { startAlarms(eventList) }, modifier = Modifier.padding(top = 400.dp)) {
+        Text(text = "Set Today's Alarms")
+      }
+    }
+  } else {
+    Column(
+      modifier = Modifier
+        .fillMaxWidth()
+        .fillMaxHeight(), verticalArrangement = Arrangement.Center,
+      horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+      val current = LocalContext.current
+      Button(onClick = {
+        getEvents(eventList.value)
+        if (eventList.value.isEmpty()) {
+          Toast.makeText(current, "No events for today", Toast.LENGTH_SHORT).show()
+        } else {
+          displayAlarmButton.value = true
+        }
+      }) {
+        Text(text = "Get Today's Events")
+      }
     }
   }
 }
@@ -226,7 +263,13 @@ fun Greeting(startAlarms: () -> Unit) {
 @Composable
 fun DefaultPreview() {
   RememberTheme {
-    Greeting(startAlarms = { })
+    Greeting(startAlarms = { }) {
+      mutableStateOf(
+        listOf<Event>(
+
+        )
+      )
+    }
   }
 }
 

@@ -28,4 +28,4 @@ class LoginViewModel @Inject constructor() :
   }
 }
 
-data class Event(val startTime: String, val endTime: String)
+data class Event(val title: String, val startTime: String, val endTime: String)
