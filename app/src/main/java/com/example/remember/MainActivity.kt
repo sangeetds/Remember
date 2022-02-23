@@ -2,6 +2,8 @@ package com.example.remember
 
 import android.Manifest.permission
 import android.app.AlarmManager
+import android.content.ContentResolver
+import android.content.Context
 import android.content.Context.ALARM_SERVICE
 import android.content.pm.PackageManager
 import android.content.res.Configuration
@@ -23,6 +25,9 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -71,19 +76,6 @@ class MainActivity : ComponentActivity() {
     }
   }
 
-  private fun setUpObserver() {
-    eventsViewModel.eventsResult.observe(this@MainActivity, Observer {
-      val loginResult = it ?: return@Observer
-
-      loginResult.apply {
-        success?.let {
-
-        }
-        setResult(RESULT_OK)
-      }
-    })
-  }
-
   override fun onBackPressed() {
     super.onBackPressed()
     finish()
@@ -93,48 +85,71 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun Greeting(eventsViewModel: EventsViewModel = viewModel()) {
   val displayAlarmButton = remember { mutableStateOf(false) }
-  val eventList = remember { mutableStateOf(listOf<Event>()) }
+  val eventList = eventsViewModel.eventsResult.observeAsState(initial = EventsResult())
   val context = LocalContext.current
   val alarmManager = context.getSystemService(ALARM_SERVICE) as AlarmManager
   val contentResolver = context.contentResolver
 
   if (displayAlarmButton.value) {
-    Column(
-      modifier = Modifier
-        .fillMaxWidth()
-        .fillMaxHeight()
-        .padding(top = 70.dp, bottom = 70.dp, start = 40.dp, end = 40.dp)
-      , verticalArrangement = Arrangement.Center,
-      horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-    LazyColumn() {
-      items(eventList.value) { event ->
-        Text(text = "${event.title}: (${event.startTime.convertToLocalDate()}, ${event.endTime.convertToLocalDate()})")
+    DisplayTodaysEvents(eventList, eventsViewModel, context, alarmManager)
+  } else {
+    DisplayButtons(eventsViewModel, contentResolver, eventList, displayAlarmButton, context)
+  }
+}
+
+@Composable
+private fun DisplayButtons(
+  eventsViewModel: EventsViewModel,
+  contentResolver: ContentResolver,
+  eventList: State<EventsResult>,
+  displayAlarmButton: MutableState<Boolean>,
+  context: Context
+) {
+  Column(
+    modifier = Modifier
+      .fillMaxWidth()
+      .fillMaxHeight(), verticalArrangement = Arrangement.Center,
+    horizontalAlignment = Alignment.CenterHorizontally
+  ) {
+    Button(onClick = {
+      eventsViewModel.getEvents(contentResolver)
+      val eventsResult = eventList.value
+      when {
+        eventsResult.success != null && !eventsResult.loading -> displayAlarmButton.value = true
+        eventsResult.success == null && !eventsResult.loading -> Toast.makeText(context, eventsResult.error, Toast.LENGTH_SHORT).show()
       }
+    }) {
+      Text(text = "Get Today's Events")
     }
+  }
+}
+
+@Composable
+private fun DisplayTodaysEvents(
+  eventList: State<EventsResult>,
+  eventsViewModel: EventsViewModel,
+  context: Context,
+  alarmManager: AlarmManager
+) {
+  Column(
+    modifier = Modifier
+      .fillMaxWidth()
+      .fillMaxHeight()
+      .padding(top = 70.dp, bottom = 70.dp, start = 40.dp, end = 40.dp),
+    verticalArrangement = Arrangement.Center,
+    horizontalAlignment = Alignment.CenterHorizontally
+  ) {
+    eventList.value.success?.let { events ->
+      LazyColumn() {
+        items(events) { event ->
+          Text(text = "${event.title}: (${event.startTime.convertToLocalDate()}, ${event.endTime.convertToLocalDate()})")
+        }
+      }
       Button(
-        onClick = { eventsViewModel.getAlarm(context, eventList.value, alarmManager) },
+        onClick = { eventsViewModel.getAlarm(context, events, alarmManager) },
         modifier = Modifier.padding(top = 400.dp)
       ) {
         Text(text = "Set Today's Alarms")
-      }
-    }
-  } else {
-    Column(
-      modifier = Modifier
-        .fillMaxWidth()
-        .fillMaxHeight(), verticalArrangement = Arrangement.Center,
-      horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-      Button(onClick = {
-        eventsViewModel.getEvents(contentResolver)
-        if (eventList.value.isEmpty()) {
-          Toast.makeText(context, "No events for today", Toast.LENGTH_SHORT).show()
-        } else {
-          displayAlarmButton.value = true
-        }
-      }) {
-        Text(text = "Get Today's Events")
       }
     }
   }

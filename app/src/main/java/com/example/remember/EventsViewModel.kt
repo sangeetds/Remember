@@ -8,12 +8,14 @@ import android.content.Intent
 import android.os.SystemClock
 import android.provider.CalendarContract.Events
 import android.provider.CalendarContract.Events.CONTENT_URI
-import androidx.activity.ComponentActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.cash.copper.flow.mapToList
+import app.cash.copper.flow.observeQuery
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import javax.inject.Inject
@@ -30,25 +32,19 @@ class EventsViewModel @Inject constructor() :
     val selection = "${Events.DTSTART} >= ? AND ${Events.DTSTART}<= ?"
     val selectionArgs = getSelectionArgs()
 
-    val result = mutableListOf<Event>()
-
-    val cursor = contentResolver.query(
-      CONTENT_URI,
-      projection,
-      selection,
-      selectionArgs,
-      null
-    )
-    if (cursor != null) {
-      while (cursor.moveToNext()) {
-        if (cursor.getString(0) != null && cursor.getString(1) != null && cursor.getString(2) != null) {
-          result.add(Event(cursor.getString(0), cursor.getString(1), cursor.getString(2)))
+    contentResolver.observeQuery(CONTENT_URI, projection, selection, selectionArgs, null)
+      .mapToList { cursor ->
+        Event(
+          cursor.getString(0),
+          cursor.getString(1) ?: startOfDay,
+          cursor.getString(2) ?: endOfDay
+        )
+      }.collect { events ->
+        when (events.isEmpty()) {
+          true -> _eventsResult.value = EventsResult(success = events, loading = false)
+          else -> _eventsResult.value = EventsResult(error = "No events found!", loading = false)
         }
       }
-      cursor.close()
-    }
-
-    _eventsResult.value = EventsResult(success = result)
   }
 
   fun getAlarm(context: Context, lists: List<Event>, mgrAlarm: AlarmManager) {
@@ -56,7 +52,8 @@ class EventsViewModel @Inject constructor() :
     lists.forEachIndexed { i, event ->
       val intent = Intent(context, RememebrAlarmReceiver::class.java)
       intent.putExtra("time", event.startTime)
-      val pendingIntent = PendingIntent.getBroadcast(context, i, intent, PendingIntent.FLAG_IMMUTABLE)
+      val pendingIntent =
+        PendingIntent.getBroadcast(context, i, intent, PendingIntent.FLAG_IMMUTABLE)
       mgrAlarm.set(
         AlarmManager.ELAPSED_REALTIME_WAKEUP,
         SystemClock.elapsedRealtime() + 1000 * i,
