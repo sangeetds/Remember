@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.provider.AlarmClock
 import com.example.remember.events.data.Event
-import com.example.remember.convertToLocalDate
+import com.example.remember.common.convertToLocalDate
 
 class RememberAlarmReceiver : BroadcastReceiver() {
 

@@ -14,11 +14,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.cash.copper.flow.mapToList
 import app.cash.copper.flow.observeQuery
-import com.example.remember.END_OF_DAY
+import com.example.remember.common.END_OF_DAY
 import com.example.remember.events.data.Event
 import com.example.remember.events.EventsResult
 import com.example.remember.R.string
-import com.example.remember.START_OF_DAY
+import com.example.remember.common.START_OF_DAY
 import com.example.remember.alarms.RememberAlarmReceiver
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collect

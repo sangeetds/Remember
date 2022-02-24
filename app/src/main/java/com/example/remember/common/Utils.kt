@@ -1,4 +1,4 @@
-package com.example.remember
+package com.example.remember.common
 
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
