@@ -11,7 +11,6 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -25,7 +24,6 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -35,15 +33,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.remember.ui.theme.RememberTheme
-import com.google.android.material.progressindicator.CircularProgressIndicator
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
-  private val eventsViewModel: EventsViewModel by viewModels()
-  private lateinit var progressIndicator: CircularProgressIndicator // by lazy { findViewById(id.loading_icon) }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -60,15 +54,16 @@ class MainActivity : ComponentActivity() {
         }
       }
     }
-    // darkModeConfigure()
-    // setUpObserver()
+    darkModeConfigure()
   }
 
   private fun darkModeConfigure() {
     when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
       Configuration.UI_MODE_NIGHT_YES -> {
+        Timber.d("Configuring Dark Theme")
       }
       Configuration.UI_MODE_NIGHT_NO -> {
+        Timber.d("Configuring Light Theme")
       }
     }
   }
@@ -87,12 +82,19 @@ fun Greeting(eventsViewModel: EventsViewModel = viewModel()) {
   val contentResolver = context.contentResolver
 
   when {
-    eventsResult.value.loading -> DisplayButtons(eventsViewModel, contentResolver, eventsResult)
-    eventsResult.value.error != null -> {
-      Toast.makeText(context, eventsResult.value.error, Toast.LENGTH_SHORT).show()
-      DisplayButtons(eventsViewModel, contentResolver, eventsResult)
+    eventsResult.value.loading -> {
+      Timber.i("Displaying Landing page.")
+      DisplayButtons(eventsViewModel, contentResolver, context = context)
     }
-    else -> DisplayTodaysEvents(eventsResult, eventsViewModel, context, alarmManager)
+    eventsResult.value.error != null -> {
+      Timber.i("No events found for today.")
+      Toast.makeText(context, eventsResult.value.error, Toast.LENGTH_SHORT).show()
+      DisplayButtons(eventsViewModel, contentResolver, context = context)
+    }
+    else -> {
+      Timber.i("Found ${eventsResult.value.success?.size ?: 0} events. Showing today's events.")
+      DisplayTodaysEvents(eventsResult, eventsViewModel, context, alarmManager)
+    }
   }
 }
 
@@ -100,7 +102,7 @@ fun Greeting(eventsViewModel: EventsViewModel = viewModel()) {
 private fun DisplayButtons(
   eventsViewModel: EventsViewModel,
   contentResolver: ContentResolver,
-  eventList: State<EventsResult>
+  context: Context
 ) {
   Column(
     modifier = Modifier
@@ -109,8 +111,8 @@ private fun DisplayButtons(
     horizontalAlignment = Alignment.CenterHorizontally
   ) {
     Button(onClick = {
+      Toast.makeText(context, "Loading today's events", Toast.LENGTH_SHORT).show()
       eventsViewModel.getEvents(contentResolver)
-      val eventsResult = eventList.value
     }) {
       Text(text = "Get Today's Events")
     }

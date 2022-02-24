@@ -17,6 +17,7 @@ import app.cash.copper.flow.observeQuery
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.util.Calendar
 import javax.inject.Inject
 
@@ -36,8 +37,8 @@ class EventsViewModel @Inject constructor() :
       .mapToList { cursor ->
         Event(
           cursor.getString(0),
-          cursor.getString(1) ?: startOfDay,
-          cursor.getString(2) ?: endOfDay
+          cursor.getString(1) ?: START_OF_DAY,
+          cursor.getString(2) ?: END_OF_DAY
         )
       }.collect { events ->
         when (events.isNotEmpty()) {
@@ -50,8 +51,8 @@ class EventsViewModel @Inject constructor() :
   fun getAlarm(context: Context, lists: List<Event>, mgrAlarm: AlarmManager) {
     // Get AlarmManager instance
     lists.forEachIndexed { i, event ->
-      val intent = Intent(context, RememebrAlarmReceiver::class.java)
-      intent.putExtra("time", event.startTime)
+      val intent = Intent(context, RememberAlarmReceiver::class.java)
+      intent.putExtra("event", event)
       val pendingIntent =
         PendingIntent.getBroadcast(context, i, intent, PendingIntent.FLAG_IMMUTABLE)
       mgrAlarm.set(
@@ -79,6 +80,9 @@ class EventsViewModel @Inject constructor() :
       calendar.get(Calendar.DAY_OF_MONTH), 23, 59, 59
     )
     val endDay: Long = calendar.timeInMillis
-    return arrayOf(startDay.toString(), endDay.toString())
+
+    val selectionArgs = arrayOf(startDay.toString(), endDay.toString())
+    Timber.i("Selection arg is $selectionArgs")
+    return selectionArgs
   }
 }

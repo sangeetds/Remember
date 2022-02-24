@@ -9,5 +9,5 @@ fun String.convertToLocalDate() =
     TimeZone.currentSystemDefault()
   )
 
-const val startOfDay: String = "00:00:00"
-const val endOfDay: String = "23:59:59"
+const val START_OF_DAY: String = "00:00:00"
+const val END_OF_DAY: String = "23:59:59"
