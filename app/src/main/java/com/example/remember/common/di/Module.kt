@@ -1,4 +1,4 @@
-package com.example.remember
+package com.example.remember.common.di
 
 import dagger.Module
 import dagger.hilt.InstallIn

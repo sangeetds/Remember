@@ -1,4 +1,4 @@
-package com.example.remember
+package com.example.remember.events.data
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize

@@ -1,4 +1,4 @@
-package com.example.remember
+package com.example.remember.common
 
 /**
  * A generic class that holds a value with its loading status.

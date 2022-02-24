@@ -1,4 +1,4 @@
-package com.example.remember.ui.theme
+package com.example.remember.events.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

@@ -1,4 +1,4 @@
-package com.example.remember
+package com.example.remember.events.ui
 
 import android.Manifest.permission
 import android.app.AlarmManager
@@ -32,7 +32,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.remember.ui.theme.RememberTheme
+import com.example.remember.convertToLocalDate
+import com.example.remember.events.EventsResult
+import com.example.remember.events.ui.theme.RememberTheme
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 

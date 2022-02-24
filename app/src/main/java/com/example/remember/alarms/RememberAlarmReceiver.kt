@@ -1,12 +1,11 @@
-package com.example.remember
+package com.example.remember.alarms
 
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.provider.AlarmClock
-import kotlinx.datetime.Instant
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
+import com.example.remember.events.data.Event
+import com.example.remember.convertToLocalDate
 
 class RememberAlarmReceiver : BroadcastReceiver() {
 
