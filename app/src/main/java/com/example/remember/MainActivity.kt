@@ -28,14 +28,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Observer
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.remember.ui.theme.RememberTheme
 import com.google.android.material.progressindicator.CircularProgressIndicator
@@ -84,16 +81,18 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun Greeting(eventsViewModel: EventsViewModel = viewModel()) {
-  val displayAlarmButton = remember { mutableStateOf(false) }
-  val eventList = eventsViewModel.eventsResult.observeAsState(initial = EventsResult())
+  val eventsResult = eventsViewModel.eventsResult.observeAsState(initial = EventsResult())
   val context = LocalContext.current
   val alarmManager = context.getSystemService(ALARM_SERVICE) as AlarmManager
   val contentResolver = context.contentResolver
 
-  if (displayAlarmButton.value) {
-    DisplayTodaysEvents(eventList, eventsViewModel, context, alarmManager)
-  } else {
-    DisplayButtons(eventsViewModel, contentResolver, eventList, displayAlarmButton, context)
+  when {
+    eventsResult.value.loading -> DisplayButtons(eventsViewModel, contentResolver, eventsResult)
+    eventsResult.value.error != null -> {
+      Toast.makeText(context, eventsResult.value.error, Toast.LENGTH_SHORT).show()
+      DisplayButtons(eventsViewModel, contentResolver, eventsResult)
+    }
+    else -> DisplayTodaysEvents(eventsResult, eventsViewModel, context, alarmManager)
   }
 }
 
@@ -101,9 +100,7 @@ fun Greeting(eventsViewModel: EventsViewModel = viewModel()) {
 private fun DisplayButtons(
   eventsViewModel: EventsViewModel,
   contentResolver: ContentResolver,
-  eventList: State<EventsResult>,
-  displayAlarmButton: MutableState<Boolean>,
-  context: Context
+  eventList: State<EventsResult>
 ) {
   Column(
     modifier = Modifier
@@ -114,10 +111,6 @@ private fun DisplayButtons(
     Button(onClick = {
       eventsViewModel.getEvents(contentResolver)
       val eventsResult = eventList.value
-      when {
-        eventsResult.success != null && !eventsResult.loading -> displayAlarmButton.value = true
-        eventsResult.success == null && !eventsResult.loading -> Toast.makeText(context, eventsResult.error, Toast.LENGTH_SHORT).show()
-      }
     }) {
       Text(text = "Get Today's Events")
     }

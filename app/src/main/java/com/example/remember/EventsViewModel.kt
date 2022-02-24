@@ -40,7 +40,7 @@ class EventsViewModel @Inject constructor() :
           cursor.getString(2) ?: endOfDay
         )
       }.collect { events ->
-        when (events.isEmpty()) {
+        when (events.isNotEmpty()) {
           true -> _eventsResult.value = EventsResult(success = events, loading = false)
           else -> _eventsResult.value = EventsResult(error = "No events found!", loading = false)
         }
