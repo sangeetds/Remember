@@ -1,3 +1,4 @@
 <resources>
   <string name="app_name">Remember</string>
+  <string name="events_error">No events found!</string>
 </resources>

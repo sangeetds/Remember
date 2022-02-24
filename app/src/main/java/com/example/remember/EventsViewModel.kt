@@ -43,7 +43,7 @@ class EventsViewModel @Inject constructor() :
       }.collect { events ->
         when (events.isNotEmpty()) {
           true -> _eventsResult.value = EventsResult(success = events, loading = false)
-          else -> _eventsResult.value = EventsResult(error = "No events found!", loading = false)
+          else -> _eventsResult.value = EventsResult(error = R.string.events_error, loading = false)
         }
       }
   }

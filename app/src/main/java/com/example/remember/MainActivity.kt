@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
     if (checkSelfPermission(permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED) {
       Timber.d("Permission is granted")
     } else {
-      requestPermissions(arrayOf(permission.READ_CALENDAR), 42);
+      requestPermissions(arrayOf(permission.READ_CALENDAR), 42)
       Timber.d("Permission is revoked")
     }
     setContent {
@@ -88,7 +88,7 @@ fun Greeting(eventsViewModel: EventsViewModel = viewModel()) {
     }
     eventsResult.value.error != null -> {
       Timber.i("No events found for today.")
-      Toast.makeText(context, eventsResult.value.error, Toast.LENGTH_SHORT).show()
+      Toast.makeText(context, context.getString(eventsResult.value.error!!), Toast.LENGTH_SHORT).show()
       DisplayButtons(eventsViewModel, contentResolver, context = context)
     }
     else -> {
@@ -135,7 +135,7 @@ private fun DisplayTodaysEvents(
     horizontalAlignment = Alignment.CenterHorizontally
   ) {
     eventList.value.success?.let { events ->
-      LazyColumn() {
+      LazyColumn {
         items(events) { event ->
           Text(text = "${event.title}: (${event.startTime.convertToLocalDate()}, ${event.endTime.convertToLocalDate()})")
         }

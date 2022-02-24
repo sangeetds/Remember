@@ -7,5 +7,5 @@ package com.example.remember
 data class EventsResult(
   val loading: Boolean = true,
   val success: List<Event>? = null,
-  val error: String? = null
+  val error: Int? = null
 )
