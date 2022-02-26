@@ -81,6 +81,8 @@ dependencies {
 
   // Dagger Core
   implementation "com.google.dagger:dagger:$hiltVersion"
+  implementation 'androidx.appcompat:appcompat:1.4.1'
+  implementation 'com.google.android.material:material:1.5.0'
   kapt "com.google.dagger:dagger-compiler:$hiltVersion"
 
   // Dagger Android

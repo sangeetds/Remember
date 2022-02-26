@@ -16,8 +16,13 @@ import app.cash.copper.flow.mapToList
 import app.cash.copper.flow.observeQuery
 import com.example.remember.R.string
 import com.example.remember.alarms.RememberAlarmReceiver
+import com.example.remember.common.ALARM_FOR_TODAY
+import com.example.remember.common.DAILY_ALARMS
 import com.example.remember.common.END_OF_DAY
+import com.example.remember.common.EVENT
+import com.example.remember.common.INTERVAL
 import com.example.remember.common.START_OF_DAY
+import com.example.remember.common.getSelectionArgs
 import com.example.remember.events.EventsResult
 import com.example.remember.events.data.Event
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,8 +33,7 @@ import java.util.Calendar
 import javax.inject.Inject
 
 @HiltViewModel
-class EventsViewModel @Inject constructor() :
-  ViewModel() {
+class EventsViewModel @Inject constructor() : ViewModel() {
 
   private val _eventsResult = MutableLiveData<EventsResult>()
   val eventsResult: LiveData<EventsResult> = _eventsResult
@@ -57,7 +61,8 @@ class EventsViewModel @Inject constructor() :
   fun getAlarm(context: Context, lists: List<Event>, mgrAlarm: AlarmManager) {
     lists.forEachIndexed { i, event ->
       val intent = Intent(context, RememberAlarmReceiver::class.java)
-      intent.putExtra("event", event)
+      intent.putExtra(EVENT, event)
+      intent.putExtra(INTERVAL, ALARM_FOR_TODAY)
       val pendingIntent =
         PendingIntent.getBroadcast(context, i, intent, PendingIntent.FLAG_IMMUTABLE)
       mgrAlarm.set(
@@ -68,31 +73,9 @@ class EventsViewModel @Inject constructor() :
     }
   }
 
-  private fun getSelectionArgs(): Array<String> {
-    val calendar: Calendar = Calendar.getInstance()
-    calendar.set(
-      calendar.get(Calendar.YEAR),
-      calendar.get(Calendar.MONTH),
-      calendar.get(Calendar.DAY_OF_MONTH),
-      0,
-      0,
-      0
-    )
-    val startDay: Long = calendar.timeInMillis
-    calendar.set(
-      calendar.get(Calendar.YEAR),
-      calendar.get(Calendar.MONTH),
-      calendar.get(Calendar.DAY_OF_MONTH), 23, 59, 59
-    )
-    val endDay: Long = calendar.timeInMillis
-
-    val selectionArgs = arrayOf(startDay.toString(), endDay.toString())
-    Timber.i("Selection arg is $selectionArgs")
-    return selectionArgs
-  }
-
   fun setAlarmEveryday(context: Context, alarmManager: AlarmManager) {
     val intent = Intent(context, RememberAlarmReceiver::class.java)
+    intent.putExtra(INTERVAL, DAILY_ALARMS)
     val calendar: Calendar = Calendar.getInstance()
 
     calendar.timeInMillis = System.currentTimeMillis()
