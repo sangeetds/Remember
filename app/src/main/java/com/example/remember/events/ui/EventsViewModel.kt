@@ -58,7 +58,7 @@ class EventsViewModel @Inject constructor() : ViewModel() {
       }
   }
 
-  fun getAlarm(context: Context, lists: List<Event>, mgrAlarm: AlarmManager) {
+  fun setAlarm(context: Context, lists: List<Event>, mgrAlarm: AlarmManager) {
     lists.forEachIndexed { i, event ->
       val intent = Intent(context, RememberAlarmReceiver::class.java)
       intent.putExtra(EVENT, event)
@@ -78,27 +78,22 @@ class EventsViewModel @Inject constructor() : ViewModel() {
     intent.putExtra(INTERVAL, DAILY_ALARMS)
     val calendar: Calendar = Calendar.getInstance()
 
-    calendar.timeInMillis = System.currentTimeMillis()
-
-    // if it's after or equal 9 am schedule for next day
-
-    // if it's after or equal 9 am schedule for next day
-    if (Calendar.getInstance()[Calendar.HOUR_OF_DAY] >= 9) {
+    if (Calendar.getInstance()[Calendar.HOUR_OF_DAY] >= 14) {
       Timber.i("Alarm will schedule for next day!")
       calendar.add(Calendar.DAY_OF_YEAR, 1) // add, not set!
     } else {
       Timber.i("Alarm will schedule for today!")
     }
-    calendar[Calendar.HOUR_OF_DAY] = 9
-    calendar[Calendar.MINUTE] = 0
+    calendar[Calendar.HOUR_OF_DAY] = 13
+    calendar[Calendar.MINUTE] = 35
     calendar[Calendar.SECOND] = 0
-
+    Timber.i("${calendar.timeInMillis}")
     val pendingIntent =
       PendingIntent.getBroadcast(context, 1, intent, PendingIntent.FLAG_IMMUTABLE)
-    alarmManager.setInexactRepeating(
+    alarmManager.set(
       AlarmManager.ELAPSED_REALTIME_WAKEUP,
-      SystemClock.elapsedRealtime() + 1000L,
-      AlarmManager.INTERVAL_DAY,
+      calendar.timeInMillis,
+      // AlarmManager.INTERVAL_DAY,
       pendingIntent
     )
   }

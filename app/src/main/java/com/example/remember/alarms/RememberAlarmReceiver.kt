@@ -39,7 +39,7 @@ class RememberAlarmReceiver : BroadcastReceiver() {
         }
       }
       DAILY_ALARMS -> {
-        val alarmActivityIntent = Intent(context, AlarmActivity::class.java)
+        val alarmActivityIntent = AlarmActivity.getIntent(context = context)
         context.startActivity(alarmActivityIntent)
       }
     }
