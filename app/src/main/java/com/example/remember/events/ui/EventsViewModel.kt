@@ -24,7 +24,8 @@ import com.example.remember.common.INTERVAL
 import com.example.remember.common.START_OF_DAY
 import com.example.remember.common.getSelectionArgs
 import com.example.remember.events.EventsResult
-import com.example.remember.events.data.Event
+import com.example.remember.events.data.EventsRepository
+import com.example.remember.events.data.model.Event
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -33,33 +34,40 @@ import java.util.Calendar
 import javax.inject.Inject
 
 @HiltViewModel
-class EventsViewModel @Inject constructor() : ViewModel() {
+class EventsViewModel @Inject constructor(private val eventsRepository: EventsRepository) :
+  ViewModel() {
 
   private val _eventsResult = MutableLiveData<EventsResult>()
   val eventsResult: LiveData<EventsResult> = _eventsResult
 
   fun getEvents(contentResolver: ContentResolver) = viewModelScope.launch {
-    val projection = arrayOf(Events.TITLE, Events.DTSTART, Events.DTEND)
-    val selection = "${Events.DTSTART} >= ? AND ${Events.DTSTART}<= ?"
-    val selectionArgs = getSelectionArgs()
+    if (eventsRepository.cacheEvents != null) {
+      _eventsResult.value = EventsResult(success = eventsRepository.cacheEvents, loading = false)
+    }
+    else {
+      val projection = arrayOf(Events.TITLE, Events.DTSTART, Events.DTEND)
+      val selection = "${Events.DTSTART} >= ? AND ${Events.DTSTART}<= ?"
+      val selectionArgs = getSelectionArgs()
 
-    contentResolver.observeQuery(CONTENT_URI, projection, selection, selectionArgs, null)
-      .mapToList { cursor ->
-        Event(
-          title = cursor.getString(0),
-          startTime = cursor.getString(1) ?: START_OF_DAY,
-          endTime = cursor.getString(2) ?: END_OF_DAY
-        )
-      }.collect { events ->
-        when (events.isNotEmpty()) {
-          true -> _eventsResult.value = EventsResult(success = events, loading = false)
-          else -> _eventsResult.value = EventsResult(error = string.events_error, loading = false)
+      contentResolver.observeQuery(CONTENT_URI, projection, selection, selectionArgs, null)
+        .mapToList { cursor ->
+          Event(
+            title = cursor.getString(0),
+            startTime = cursor.getString(1) ?: START_OF_DAY,
+            endTime = cursor.getString(2) ?: END_OF_DAY
+          )
+        }.collect { events ->
+          when (events.isNotEmpty()) {
+            true -> _eventsResult.value = EventsResult(success = events, loading = false)
+            else -> _eventsResult.value = EventsResult(error = string.events_error, loading = false)
+          }
+          eventsRepository.saveEvents(events = events)
         }
-      }
+    }
   }
 
-  fun setAlarm(context: Context, lists: List<Event>, mgrAlarm: AlarmManager) {
-    lists.forEachIndexed { i, event ->
+  fun setAlarm(context: Context, events: List<Event>, mgrAlarm: AlarmManager) {
+    events.forEachIndexed { i, event ->
       val intent = Intent(context, RememberAlarmReceiver::class.java)
       intent.putExtra(EVENT, event)
       intent.putExtra(INTERVAL, ALARM_FOR_TODAY)
@@ -70,7 +78,11 @@ class EventsViewModel @Inject constructor() : ViewModel() {
         SystemClock.elapsedRealtime() + 1000 * i,
         pendingIntent
       )
+      event.alarmSet = true
     }
+
+    eventsRepository.updateEvents(events = events)
+    eventsRepository.cacheEvents = null
   }
 
   fun setAlarmEveryday(context: Context, alarmManager: AlarmManager) {

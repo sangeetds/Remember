@@ -1,6 +1,6 @@
 package com.example.remember.events
 
-import com.example.remember.events.data.Event
+import com.example.remember.events.data.model.Event
 
 /**
  * Authentication result : success (user details) or error message.

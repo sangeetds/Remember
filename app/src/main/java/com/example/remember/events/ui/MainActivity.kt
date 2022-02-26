@@ -121,10 +121,10 @@ private fun DisplayButtons(
       Toast.makeText(context, "Loading today's events", Toast.LENGTH_SHORT).show()
       eventsViewModel.getEvents(contentResolver)
     }, modifier = Modifier.width(200.dp)) {
-      Text(text = "Get Today's Events")
+      Text(text = "See Today's Events")
     }
     Button(onClick = {
-      Toast.makeText(context, "Loading everday's events", Toast.LENGTH_SHORT).show()
+      Toast.makeText(context, "Loading everday events", Toast.LENGTH_SHORT).show()
       eventsViewModel.setAlarmEveryday(context = context, alarmManager = alarmManager)
     }, modifier = Modifier.width(200.dp)) {
       Text(text = "Set Alarms Everyday")

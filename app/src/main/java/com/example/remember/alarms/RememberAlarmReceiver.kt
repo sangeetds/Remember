@@ -4,23 +4,12 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.provider.AlarmClock
-import android.provider.CalendarContract.Events
-import androidx.appcompat.app.AppCompatActivity
-import app.cash.copper.flow.mapToList
-import app.cash.copper.flow.observeQuery
-import com.example.remember.R.string
 import com.example.remember.common.ALARM_FOR_TODAY
 import com.example.remember.common.DAILY_ALARMS
-import com.example.remember.common.END_OF_DAY
 import com.example.remember.common.EVENT
 import com.example.remember.common.INTERVAL
-import com.example.remember.common.START_OF_DAY
 import com.example.remember.common.convertToLocalDate
-import com.example.remember.common.getSelectionArgs
-import com.example.remember.events.EventsResult
-import com.example.remember.events.data.Event
-import com.example.remember.events.ui.EventsViewModel_Factory
-import kotlinx.coroutines.flow.collect
+import com.example.remember.events.data.model.Event
 
 class RememberAlarmReceiver : BroadcastReceiver() {
 
