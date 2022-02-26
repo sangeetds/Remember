@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Button
@@ -80,21 +81,24 @@ class MainActivity : ComponentActivity() {
 fun Greeting(eventsViewModel: EventsViewModel = viewModel()) {
   val eventsResult = eventsViewModel.eventsResult.observeAsState(initial = EventsResult())
   val context = LocalContext.current
-  val alarmManager = context.getSystemService(ALARM_SERVICE) as AlarmManager
   val contentResolver = context.contentResolver
 
   when {
     eventsResult.value.loading -> {
       Timber.i("Displaying Landing page.")
-      DisplayButtons(eventsViewModel, contentResolver, context = context)
+      val alarmManager = context.getSystemService(ALARM_SERVICE) as AlarmManager
+      DisplayButtons(eventsViewModel, contentResolver, context = context, alarmManager = alarmManager)
     }
     eventsResult.value.error != null -> {
       Timber.i("No events found for today.")
-      Toast.makeText(context, context.getString(eventsResult.value.error!!), Toast.LENGTH_SHORT).show()
-      DisplayButtons(eventsViewModel, contentResolver, context = context)
+      val alarmManager = context.getSystemService(ALARM_SERVICE) as AlarmManager
+      Toast.makeText(context, context.getString(eventsResult.value.error!!), Toast.LENGTH_SHORT)
+        .show()
+      DisplayButtons(eventsViewModel, contentResolver, context = context, alarmManager = alarmManager)
     }
     else -> {
       Timber.i("Found ${eventsResult.value.success?.size ?: 0} events. Showing today's events.")
+      val alarmManager = context.getSystemService(ALARM_SERVICE) as AlarmManager
       DisplayTodaysEvents(eventsResult, eventsViewModel, context, alarmManager)
     }
   }
@@ -104,7 +108,8 @@ fun Greeting(eventsViewModel: EventsViewModel = viewModel()) {
 private fun DisplayButtons(
   eventsViewModel: EventsViewModel,
   contentResolver: ContentResolver,
-  context: Context
+  context: Context,
+  alarmManager: AlarmManager
 ) {
   Column(
     modifier = Modifier
@@ -115,8 +120,14 @@ private fun DisplayButtons(
     Button(onClick = {
       Toast.makeText(context, "Loading today's events", Toast.LENGTH_SHORT).show()
       eventsViewModel.getEvents(contentResolver)
-    }) {
+    }, modifier = Modifier.width(200.dp)) {
       Text(text = "Get Today's Events")
+    }
+    Button(onClick = {
+      Toast.makeText(context, "Loading everday's events", Toast.LENGTH_SHORT).show()
+      eventsViewModel.setAlarmEveryday(context = context, alarmManager = alarmManager)
+    }, modifier = Modifier.width(200.dp)) {
+      Text(text = "Set Alarms Everyday")
     }
   }
 }

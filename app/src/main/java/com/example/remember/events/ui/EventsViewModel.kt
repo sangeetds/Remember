@@ -14,12 +14,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.cash.copper.flow.mapToList
 import app.cash.copper.flow.observeQuery
-import com.example.remember.common.END_OF_DAY
-import com.example.remember.events.data.Event
-import com.example.remember.events.EventsResult
 import com.example.remember.R.string
-import com.example.remember.common.START_OF_DAY
 import com.example.remember.alarms.RememberAlarmReceiver
+import com.example.remember.common.END_OF_DAY
+import com.example.remember.common.START_OF_DAY
+import com.example.remember.events.EventsResult
+import com.example.remember.events.data.Event
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -42,9 +42,9 @@ class EventsViewModel @Inject constructor() :
     contentResolver.observeQuery(CONTENT_URI, projection, selection, selectionArgs, null)
       .mapToList { cursor ->
         Event(
-          cursor.getString(0),
-          cursor.getString(1) ?: START_OF_DAY,
-          cursor.getString(2) ?: END_OF_DAY
+          title = cursor.getString(0),
+          startTime = cursor.getString(1) ?: START_OF_DAY,
+          endTime = cursor.getString(2) ?: END_OF_DAY
         )
       }.collect { events ->
         when (events.isNotEmpty()) {
@@ -55,7 +55,6 @@ class EventsViewModel @Inject constructor() :
   }
 
   fun getAlarm(context: Context, lists: List<Event>, mgrAlarm: AlarmManager) {
-    // Get AlarmManager instance
     lists.forEachIndexed { i, event ->
       val intent = Intent(context, RememberAlarmReceiver::class.java)
       intent.putExtra("event", event)
@@ -90,5 +89,34 @@ class EventsViewModel @Inject constructor() :
     val selectionArgs = arrayOf(startDay.toString(), endDay.toString())
     Timber.i("Selection arg is $selectionArgs")
     return selectionArgs
+  }
+
+  fun setAlarmEveryday(context: Context, alarmManager: AlarmManager) {
+    val intent = Intent(context, RememberAlarmReceiver::class.java)
+    val calendar: Calendar = Calendar.getInstance()
+
+    calendar.timeInMillis = System.currentTimeMillis()
+
+    // if it's after or equal 9 am schedule for next day
+
+    // if it's after or equal 9 am schedule for next day
+    if (Calendar.getInstance()[Calendar.HOUR_OF_DAY] >= 9) {
+      Timber.i("Alarm will schedule for next day!")
+      calendar.add(Calendar.DAY_OF_YEAR, 1) // add, not set!
+    } else {
+      Timber.i("Alarm will schedule for today!")
+    }
+    calendar[Calendar.HOUR_OF_DAY] = 9
+    calendar[Calendar.MINUTE] = 0
+    calendar[Calendar.SECOND] = 0
+
+    val pendingIntent =
+      PendingIntent.getBroadcast(context, 1, intent, PendingIntent.FLAG_IMMUTABLE)
+    alarmManager.setInexactRepeating(
+      AlarmManager.ELAPSED_REALTIME_WAKEUP,
+      SystemClock.elapsedRealtime() + 1000L,
+      AlarmManager.INTERVAL_DAY,
+      pendingIntent
+    )
   }
 }
