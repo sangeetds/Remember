@@ -150,8 +150,12 @@ private fun DisplayTodaysEvents(
     eventList.value.success?.let { events ->
       LazyColumn {
         items(events) { event ->
-          Text(text = "${event.title}: (${event.startTime.convertToLocalDate()}, ${event.endTime.convertToLocalDate()})")
+          Text(text = "${event.title}: (${event.startTime.convertToLocalDate()}, " +
+            "${event.endTime.convertToLocalDate()}), Alarm ${if (event.alarmSet) "Set" else "Not Set"}")
         }
+      }
+      if (events.none { it.alarmSet }) {
+        Text(text = "No Alarms set for today.")
       }
       Button(
         onClick = { eventsViewModel.setAlarm(context, events, alarmManager) },
