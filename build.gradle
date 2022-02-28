@@ -6,6 +6,7 @@ buildscript {
     retrofitVersion = "2.9.0"
     hiltVersion = "2.39.1"
     ktorVersion = "1.6.3"
+    roomVersion = "2.2.6"
   }
 
   dependencies {

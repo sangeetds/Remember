@@ -1,12 +1,18 @@
 package com.example.remember.events.data
 
+import androidx.lifecycle.LiveData
 import com.example.remember.events.data.model.Event
 
-interface EventsRepository {
+class EventsRepository(private val eventDatabaseDao: EventDatabaseDao) {
 
-  var cacheEvents: List<Event>?
+  var cacheEvents: List<Event>? = null
 
-  fun saveEvents(events: List<Event>)
+  val allEvents: LiveData<List<Event>> = this.eventDatabaseDao.getAll()
 
-  fun updateEvents(events: List<Event>)
+  suspend fun saveEvents(events: List<Event>) {
+    this.eventDatabaseDao.insertAll(events = events)
+    this.cacheEvents = events
+  }
+
+  suspend fun updateEvents(events: List<Event>) = this.eventDatabaseDao.updateAll(event = events)
 }

@@ -27,6 +27,8 @@ import com.example.remember.events.EventsResult
 import com.example.remember.events.data.EventsRepository
 import com.example.remember.events.data.model.Event
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -43,8 +45,7 @@ class EventsViewModel @Inject constructor(private val eventsRepository: EventsRe
   fun getEvents(contentResolver: ContentResolver) = viewModelScope.launch {
     if (eventsRepository.cacheEvents != null) {
       _eventsResult.value = EventsResult(success = eventsRepository.cacheEvents, loading = false)
-    }
-    else {
+    } else {
       val projection = arrayOf(Events.TITLE, Events.DTSTART, Events.DTEND)
       val selection = "${Events.DTSTART} >= ? AND ${Events.DTSTART}<= ?"
       val selectionArgs = getSelectionArgs()
@@ -66,24 +67,25 @@ class EventsViewModel @Inject constructor(private val eventsRepository: EventsRe
     }
   }
 
-  fun setAlarm(context: Context, events: List<Event>, mgrAlarm: AlarmManager) {
-    events.forEachIndexed { i, event ->
-      val intent = Intent(context, RememberAlarmReceiver::class.java)
-      intent.putExtra(EVENT, event)
-      intent.putExtra(INTERVAL, ALARM_FOR_TODAY)
-      val pendingIntent =
-        PendingIntent.getBroadcast(context, i, intent, PendingIntent.FLAG_IMMUTABLE)
-      mgrAlarm.set(
-        AlarmManager.ELAPSED_REALTIME_WAKEUP,
-        SystemClock.elapsedRealtime() + 1000 * i,
-        pendingIntent
-      )
-      event.alarmSet = true
-    }
+  fun setAlarm(context: Context, events: List<Event>, mgrAlarm: AlarmManager) =
+    viewModelScope.launch {
+      events.forEachIndexed { i, event ->
+        val intent = Intent(context, RememberAlarmReceiver::class.java)
+        intent.putExtra(EVENT, event)
+        intent.putExtra(INTERVAL, ALARM_FOR_TODAY)
+        val pendingIntent =
+          PendingIntent.getBroadcast(context, i, intent, PendingIntent.FLAG_IMMUTABLE)
+        mgrAlarm.set(
+          AlarmManager.ELAPSED_REALTIME_WAKEUP,
+          SystemClock.elapsedRealtime() + 1000 * i,
+          pendingIntent
+        )
+        event.alarmSet = true
+      }
 
-    eventsRepository.updateEvents(events = events)
-    eventsRepository.cacheEvents = null
-  }
+      eventsRepository.updateEvents(events = events)
+      eventsRepository.cacheEvents = null
+    }
 
   fun setAlarmEveryday(context: Context, alarmManager: AlarmManager) {
     val intent = Intent(context, RememberAlarmReceiver::class.java)

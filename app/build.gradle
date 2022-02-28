@@ -85,6 +85,11 @@ dependencies {
   implementation 'com.google.android.material:material:1.5.0'
   kapt "com.google.dagger:dagger-compiler:$hiltVersion"
 
+  // Room
+  implementation "androidx.room:room-runtime:$roomVersion"
+  implementation "androidx.room:room-ktx:$roomVersion"
+  kapt "androidx.room:room-compiler:$roomVersion"
+
   // Dagger Android
   api "com.google.dagger:dagger-android:$hiltVersion"
   api "com.google.dagger:dagger-android-support:$hiltVersion"
