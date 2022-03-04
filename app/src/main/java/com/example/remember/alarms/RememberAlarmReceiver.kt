@@ -10,11 +10,15 @@ import com.example.remember.common.EVENT
 import com.example.remember.common.INTERVAL
 import com.example.remember.common.convertToLocalDate
 import com.example.remember.events.data.model.Event
+import timber.log.Timber
 
 class RememberAlarmReceiver : BroadcastReceiver() {
 
   override fun onReceive(context: Context, intent: Intent) {
-    when (intent.getIntExtra(INTERVAL, ALARM_FOR_TODAY)) {
+    val intExtra = intent.getIntExtra(INTERVAL, ALARM_FOR_TODAY)
+    Timber.i(if (intExtra == ALARM_FOR_TODAY) "Setting alarms for today" else "Setting everyday alarms")
+
+    when (intExtra) {
       ALARM_FOR_TODAY -> {
         val event = intent.getParcelableExtra<Event>(EVENT)
         event?.let {

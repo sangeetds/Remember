@@ -27,8 +27,6 @@ import com.example.remember.events.EventsResult
 import com.example.remember.events.data.EventsRepository
 import com.example.remember.events.data.model.Event
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -92,22 +90,22 @@ class EventsViewModel @Inject constructor(private val eventsRepository: EventsRe
     intent.putExtra(INTERVAL, DAILY_ALARMS)
     val calendar: Calendar = Calendar.getInstance()
 
-    if (Calendar.getInstance()[Calendar.HOUR_OF_DAY] >= 14) {
+    if (Calendar.getInstance()[Calendar.HOUR_OF_DAY] >= 20) {
       Timber.i("Alarm will schedule for next day!")
       calendar.add(Calendar.DAY_OF_YEAR, 1) // add, not set!
     } else {
       Timber.i("Alarm will schedule for today!")
     }
-    calendar[Calendar.HOUR_OF_DAY] = 13
-    calendar[Calendar.MINUTE] = 35
+    calendar[Calendar.HOUR_OF_DAY] = 19
+    calendar[Calendar.MINUTE] = 20
     calendar[Calendar.SECOND] = 0
     Timber.i("${calendar.timeInMillis}")
     val pendingIntent =
-      PendingIntent.getBroadcast(context, 1, intent, PendingIntent.FLAG_IMMUTABLE)
-    alarmManager.set(
+      PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+    alarmManager.setRepeating(
       AlarmManager.ELAPSED_REALTIME_WAKEUP,
-      calendar.timeInMillis,
-      // AlarmManager.INTERVAL_DAY,
+      SystemClock.elapsedRealtime() + 1000,
+      24*60*60*1000,
       pendingIntent
     )
   }

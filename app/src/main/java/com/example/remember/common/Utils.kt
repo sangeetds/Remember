@@ -30,7 +30,7 @@ fun getSelectionArgs(): Array<String> {
   val endDay: Long = calendar.timeInMillis
 
   val selectionArgs = arrayOf(startDay.toString(), endDay.toString())
-  Timber.i("Selection arg is $selectionArgs")
+  Timber.i("Selection arg is ${selectionArgs.toList()}")
   return selectionArgs
 }
 
