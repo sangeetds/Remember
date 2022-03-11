@@ -25,6 +25,7 @@ class AlarmActivity : ComponentActivity() {
       val eventResult = it ?: return@Observer
 
       eventResult.success?.let { events ->
+        Timber.i("${events.size} events found")
         eventsViewModel.setAlarm(this@AlarmActivity, events, alarmManager)
       }
 

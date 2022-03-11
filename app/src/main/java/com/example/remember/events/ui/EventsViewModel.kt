@@ -51,11 +51,12 @@ class EventsViewModel @Inject constructor(private val eventsRepository: EventsRe
       contentResolver.observeQuery(CONTENT_URI, projection, selection, selectionArgs, null)
         .mapToList { cursor ->
           Event(
-            title = cursor.getString(0),
+            title = cursor.getString(0) ?: "",
             startTime = cursor.getString(1) ?: START_OF_DAY,
             endTime = cursor.getString(2) ?: END_OF_DAY
           )
         }.collect { events ->
+          Timber.i("${events.size} events found.")
           when (events.isNotEmpty()) {
             true -> _eventsResult.value = EventsResult(success = events, loading = false)
             else -> _eventsResult.value = EventsResult(error = string.events_error, loading = false)
@@ -102,9 +103,9 @@ class EventsViewModel @Inject constructor(private val eventsRepository: EventsRe
     Timber.i("${calendar.timeInMillis}")
     val pendingIntent =
       PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
-    alarmManager.setRepeating(
+    alarmManager.setInexactRepeating(
       AlarmManager.ELAPSED_REALTIME_WAKEUP,
-      SystemClock.elapsedRealtime() + 1000,
+      SystemClock.elapsedRealtime() + 200,
       24*60*60*1000,
       pendingIntent
     )
